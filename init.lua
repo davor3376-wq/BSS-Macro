@@ -135,4 +135,76 @@ LoadModule("Slayer", "slayer.lua")
 LoadModule("Pathfinder", "pathfinder.lua")
 LoadModule("World", "world.lua")
 
+-- Global Registry
+_G.Aegis = {
+    Manifest = Manifest,
+    Actuator = Modules.Actuator,
+    Slayer = Modules.Slayer,
+    Pathfinder = Modules.Pathfinder,
+    World = Modules.World,
+    Log = Log,
+    ParseLatexFormula = ParseLatexFormula
+}
+
+-- UI Controls (Overlord Tab)
+local FarmingToggle = OverlordTab:CreateToggle({
+    Name = "Enable Farming",
+    CurrentValue = false,
+    Flag = "FarmingToggle",
+    Callback = function(Value)
+        if Value then
+            Log("Farming Enabled.")
+            if Modules.Actuator.CurrentField then
+                Modules.Actuator.StartFarming(Modules.Actuator.CurrentField)
+            else
+                Log("No Field Selected. Please select a field via the Director or manually.")
+            end
+        else
+            Log("Farming Disabled.")
+            Modules.Actuator.StopFarming()
+        end
+    end,
+})
+
+local PatternDropdown = OverlordTab:CreateDropdown({
+    Name = "Farming Pattern",
+    Options = {"Circular", "S-Pattern"},
+    CurrentOption = "Circular",
+    Flag = "PatternDropdown",
+    Callback = function(Option)
+        Modules.Actuator.FarmingPattern = Option
+        Log("Pattern set to: " .. Option)
+    end,
+})
+
+local RadiusSlider = OverlordTab:CreateSlider({
+    Name = "Pattern Radius/Width",
+    Range = {5, 50},
+    Increment = 1,
+    Suffix = "Studs",
+    CurrentValue = 15,
+    Flag = "RadiusSlider",
+    Callback = function(Value)
+        Modules.Actuator.FarmingRadius = Value
+        Modules.Actuator.PatternWidth = Value
+        Modules.Actuator.PatternLength = Value
+        Log("Radius/Width set to: " .. tostring(Value))
+    end,
+})
+
+local AutoQuestToggle = OverlordTab:CreateToggle({
+    Name = "The Director (Auto-Quest)",
+    CurrentValue = false,
+    Flag = "AutoQuestToggle",
+    Callback = function(Value)
+        if Value then
+            Log("Director Activated.")
+            Modules.Pathfinder.StartQuesting()
+        else
+            Log("Director Deactivated.")
+            Modules.Actuator.StopFarming()
+        end
+    end,
+})
+
 Log("Aegis Initialization Complete. Handshake Successful.")
