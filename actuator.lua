@@ -55,7 +55,9 @@ Actuator.Utilities = {
     ["Wind Shrine"] = Vector3.new(-482.06, 141.48, 411.94),
     ["Wealth Clock"] = Vector3.new(330.54, 48.19, 192.04),
     ["Ant Challenge"] = Vector3.new(91.39, 32.77, 543.46),
-    ["Stick Bug"] = Vector3.new(-129.07, 49.57, 149.07)
+    ["Stick Bug"] = Vector3.new(-129.07, 49.57, 149.07),
+    ["Samovar"] = Vector3.new(-185, 20, 150),
+    ["Feast"] = Vector3.new(-150, 5, 250)
 }
 
 -- Collectibles Scanner (Weighted Loop)

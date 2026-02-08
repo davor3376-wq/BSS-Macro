@@ -14,6 +14,13 @@ Slayer.BossLocations = {
     ["Coconut Crab"] = Vector3.new(-263.03, 71.42, 466.07) -- Coconut Field Center
 }
 
+-- Boss State Tracking
+Slayer.BossState = {
+    ["King Beetle"] = false, -- false = Dead/Missing, true = Alive
+    ["Tunnel Bear"] = false,
+    ["Coconut Crab"] = false
+}
+
 function Slayer.Init()
     print("Slayer Module Initialized")
 
@@ -50,18 +57,22 @@ function Slayer.MonitorBosses()
         if monstersFolder then
             for bossName, timerData in pairs(Slayer.BossTimers) do
                 local bossModel = monstersFolder:FindFirstChild(bossName)
+                local wasAlive = Slayer.BossState[bossName]
 
-                -- Boss Found: Update state or engage
                 if bossModel then
+                    -- Boss Found: Update state to Alive
+                    Slayer.BossState[bossName] = true
+
                     if Slayer.IsFarmingBoss and bossName == "Coconut Crab" then
                         Slayer.FightCrab(bossModel)
                     end
                 else
-                    -- Boss Missing: Check if it was recently killed (logic would need previous state)
-                    -- For now, we assume if NextSpawn > tick(), it's on cooldown.
-                    if timerData.NextSpawn < tick() then
-                         -- Boss *could* be alive but not rendered, or killed.
-                         -- A robust system needs to track state transitions (Alive -> Dead).
+                    -- Boss Missing
+                    if wasAlive then
+                         -- Transition: Alive -> Dead
+                         -- Trigger Kill Logic
+                         Slayer.OnBossKilled(bossName)
+                         Slayer.BossState[bossName] = false
                     end
                 end
             end
@@ -81,7 +92,17 @@ function Slayer.OnBossKilled(bossName)
             local leaderstats = game.Players.LocalPlayer:FindFirstChild("leaderstats")
             local honey = leaderstats and leaderstats:FindFirstChild("Honey")
             local honeyVal = honey and honey.Value or "Unknown"
-            _G.Aegis.SendWebhook("Boss Defeated: " .. bossName .. "\nCurrent Honey: " .. tostring(honeyVal))
+
+            -- Get Quest Progress
+            local questInfo = ""
+            if _G.Aegis.Pathfinder then
+                local quests = _G.Aegis.Pathfinder.GetActiveQuests()
+                if #quests > 0 then
+                    questInfo = "\nActive Quest: " .. quests[1].Name .. " (" .. quests[1].Progress .. ")"
+                end
+            end
+
+            _G.Aegis.SendWebhook("Boss Defeated: " .. bossName .. "\nCurrent Honey: " .. tostring(honeyVal) .. questInfo)
         end
         print("Boss Killed: " .. bossName .. ". Respawn in " .. timerData.Cooldown .. "s")
     end

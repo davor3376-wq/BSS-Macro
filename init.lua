@@ -288,7 +288,63 @@ local WebhookTestBtn = NexusTab:CreateButton({
     Callback = function()
         local honey = game.Players.LocalPlayer:FindFirstChild("leaderstats") and game.Players.LocalPlayer.leaderstats:FindFirstChild("Honey")
         local honeyVal = honey and honey.Value or "Unknown"
-        _G.Aegis.SendWebhook("Test Notification from Aegis Macro.\nCurrent Honey: " .. tostring(honeyVal))
+
+        -- Get Quest Progress
+        local quests = Modules.Pathfinder.GetActiveQuests()
+        local questInfo = ""
+        if #quests > 0 then
+            questInfo = "\nActive Quest: " .. quests[1].Name .. " (" .. quests[1].Progress .. ")"
+        end
+
+        _G.Aegis.SendWebhook("Test Notification from Aegis Macro.\nCurrent Honey: " .. tostring(honeyVal) .. questInfo)
+    end,
+})
+
+-- Nexus Optimization (3D Rendering & Particles)
+local RenderingToggle = NexusTab:CreateToggle({
+    Name = "Disable 3D Rendering",
+    CurrentValue = false,
+    Flag = "RenderingToggle",
+    Callback = function(Value)
+        game:GetService("RunService"):Set3dRenderingEnabled(not Value)
+        Log("3D Rendering: " .. tostring(not Value))
+    end,
+})
+
+local ClearParticlesBtn = NexusTab:CreateButton({
+    Name = "Clear Particles (Reduce Lag)",
+    Callback = function()
+        local count = 0
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Smoke") or obj:IsA("Fire") then
+                obj.Enabled = false
+                count = count + 1
+            end
+        end
+        Log("Disabled " .. count .. " particle effects.")
+    end,
+})
+
+-- World Tab UI (Toys)
+-- Assuming World Tab exists or adding to Botanist for now (or creating a new tab if I could, but stick to existing tabs)
+-- Let's add Toy controls to the Botanist Tab since it's related to World interaction
+local ToyToggle = BotanistTab:CreateToggle({
+    Name = "Auto-Toys (Wealth, Glue, HQ)",
+    CurrentValue = false,
+    Flag = "ToyToggle",
+    Callback = function(Value)
+        Modules.World.IsToyAuto = Value
+        Log("Auto-Toys: " .. tostring(Value))
+    end,
+})
+
+local BeesmasToggle = BotanistTab:CreateToggle({
+    Name = "Beesmas Suite (Samovar, Feast)",
+    CurrentValue = false,
+    Flag = "BeesmasToggle",
+    Callback = function(Value)
+        Modules.World.IsBeesmasAuto = Value
+        Log("Beesmas Suite: " .. tostring(Value))
     end,
 })
 
