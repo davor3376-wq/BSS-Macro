@@ -10,23 +10,23 @@ Actuator.IsFarming = false
 
 -- Coordinate Registry
 Actuator.Fields = {
-    ["Sunflower Field"] = Vector3.new(-212.53, 3.97, 170.00),
-    ["Dandelion Field"] = Vector3.new(-40.38, 3.97, 218.76),
-    ["Mushroom Field"] = Vector3.new(-92.92, 3.97, 115.72),
-    ["Blue Flower Field"] = Vector3.new(153.60, 3.97, 98.12),
-    ["Clover Field"] = Vector3.new(151, 33.47, 198.69),
-    ["Spider Field"] = Vector3.new(-43.76, 19.97, -4.11),
-    ["Bamboo Field"] = Vector3.new(132.39, 19.97, -24.32),
-    ["Strawberry Field"] = Vector3.new(-182.93, 19.97, -15.73),
-    ["Pineapple Patch"] = Vector3.new(255.21, 67.97, -206.35),
-    ["Stump Field"] = Vector3.new(422.69, 95.95, -174.36),
-    ["Cactus Field"] = Vector3.new(-193.24, 67.97, -101.94),
-    ["Pumpkin Patch"] = Vector3.new(-189.57, 67.97, -185.54),
-    ["Pine Tree Forest"] = Vector3.new(-326.85, 67.97, -188.41),
-    ["Rose Field"] = Vector3.new(-328.45, 19.92, 129.96),
-    ["Mountain Top Field"] = Vector3.new(78.28, 175.97, -172.09),
-    ["Coconut Field"] = Vector3.new(-263.03, 71.42, 466.07),
-    ["Pepper Patch"] = Vector3.new(-491.53, 123.18, 530.59)
+    ["Sunflower"] = Vector3.new(-212.53, 3.97, 170.00),
+    ["Dandelion"] = Vector3.new(-40.38, 3.97, 218.76),
+    ["Mushroom"] = Vector3.new(-92.92, 3.97, 115.72),
+    ["Blue Flower"] = Vector3.new(153.60, 3.97, 98.12),
+    ["Clover"] = Vector3.new(151, 33.47, 198.69),
+    ["Spider"] = Vector3.new(-43.76, 19.97, -4.11),
+    ["Bamboo"] = Vector3.new(132.39, 19.97, -24.32),
+    ["Strawberry"] = Vector3.new(-182.93, 19.97, -15.73),
+    ["Pineapple"] = Vector3.new(255.21, 67.97, -206.35),
+    ["Stump"] = Vector3.new(422.69, 95.95, -174.36),
+    ["Cactus"] = Vector3.new(-193.24, 67.97, -101.94),
+    ["Pumpkin"] = Vector3.new(-189.57, 67.97, -185.54),
+    ["Pine Tree"] = Vector3.new(-326.85, 67.97, -188.41),
+    ["Rose"] = Vector3.new(-328.45, 19.92, 129.96),
+    ["Mountain Top"] = Vector3.new(78.28, 175.97, -172.09),
+    ["Coconut"] = Vector3.new(-263.03, 71.42, 466.07),
+    ["Pepper"] = Vector3.new(-491.53, 123.18, 530.59)
 }
 
 Actuator.NPCs = {

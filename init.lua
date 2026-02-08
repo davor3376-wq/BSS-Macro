@@ -1,7 +1,7 @@
 local HttpService = game:GetService("HttpService")
 
 -- Configuration
-local REPO_URL = "https://raw.githubusercontent.com/USER/REPO/BRANCH/" -- Placeholder: Update with actual repo URL
+local REPO_URL = "https://raw.githubusercontent.com/USER/REPO/main/" -- Placeholder: Update with actual repo URL (e.g. jules-ai/aegis-macro)
 
 -- Rayfield Library
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
@@ -103,23 +103,38 @@ end
 
 -- Module Loader
 local Modules = {}
+Modules.Status = {} -- Track loading status of each module
 
 local function LoadModule(moduleName, fileName)
     Log("Loading Module: " .. moduleName)
     local url = REPO_URL .. fileName
+
+    -- Attempt to fetch the script
     local success, scriptContent = pcall(function() return game:HttpGet(url) end)
 
-    if success then
+    if success and scriptContent then
+        -- Attempt to compile the script
         local loadSuccess, moduleFunc = pcall(function() return loadstring(scriptContent) end)
+
         if loadSuccess and moduleFunc then
-            local module = moduleFunc()
-            Modules[moduleName] = module
-            Log(moduleName .. " Loaded.")
+            -- Attempt to execute/init the module (returns a table)
+            local execSuccess, module = pcall(moduleFunc)
+
+            if execSuccess and type(module) == "table" then
+                Modules[moduleName] = module
+                Modules.Status[moduleName] = true
+                Log(moduleName .. " Loaded Successfully.")
+            else
+                Modules.Status[moduleName] = false
+                Log("Error initializing " .. moduleName .. ": " .. tostring(module)) -- module here is error msg
+            end
         else
+            Modules.Status[moduleName] = false
             Log("Error compiling " .. moduleName)
         end
     else
-        Log("Failed to fetch " .. moduleName)
+        Modules.Status[moduleName] = false
+        Log("Failed to fetch " .. moduleName .. " (HTTP 404/Error)")
     end
 end
 
@@ -137,6 +152,7 @@ _G.Aegis = {
     Slayer = Modules.Slayer,
     Pathfinder = Modules.Pathfinder,
     World = Modules.World,
+    Status = Modules.Status,
     Log = Log,
     ParseLatexFormula = ParseLatexFormula,
     WebhookURL = "",
@@ -184,6 +200,8 @@ local FarmingToggle = OverlordTab:CreateToggle({
     CurrentValue = false,
     Flag = "FarmingToggle",
     Callback = function(Value)
+        if not Modules.Status["Actuator"] then Log("Error: Actuator module not loaded.") return end
+
         if Value then
             Log("Farming Enabled.")
             if Modules.Actuator.CurrentField then
@@ -204,6 +222,7 @@ local PatternDropdown = OverlordTab:CreateDropdown({
     CurrentOption = "Circular",
     Flag = "PatternDropdown",
     Callback = function(Option)
+        if not Modules.Status["Actuator"] then Log("Error: Actuator module not loaded.") return end
         Modules.Actuator.FarmingPattern = Option
         Log("Pattern set to: " .. Option)
     end,
@@ -217,6 +236,7 @@ local RadiusSlider = OverlordTab:CreateSlider({
     CurrentValue = 15,
     Flag = "RadiusSlider",
     Callback = function(Value)
+        if not Modules.Status["Actuator"] then Log("Error: Actuator module not loaded.") return end
         Modules.Actuator.FarmingRadius = Value
         Modules.Actuator.PatternWidth = Value
         Modules.Actuator.PatternLength = Value
@@ -229,6 +249,11 @@ local AutoQuestToggle = OverlordTab:CreateToggle({
     CurrentValue = false,
     Flag = "AutoQuestToggle",
     Callback = function(Value)
+        if not Modules.Status["Pathfinder"] or not Modules.Status["Actuator"] then
+            Log("Error: Pathfinder/Actuator not loaded.")
+            return
+        end
+
         if Value then
             Log("Director Activated.")
             Modules.Pathfinder.StartQuesting()
@@ -245,6 +270,7 @@ local SlayerToggle = SlayerTab:CreateToggle({
     CurrentValue = false,
     Flag = "SlayerToggle",
     Callback = function(Value)
+        if not Modules.Status["Slayer"] then Log("Error: Slayer module not loaded.") return end
         Modules.Slayer.IsFarmingBoss = Value
         Log("Boss Farming: " .. tostring(Value))
     end,
@@ -256,6 +282,7 @@ local PlanterToggle = BotanistTab:CreateToggle({
     CurrentValue = false,
     Flag = "PlanterToggle",
     Callback = function(Value)
+        if not Modules.Status["World"] then Log("Error: World module not loaded.") return end
         Modules.World.IsPlanting = Value
         Log("Auto-Planter: " .. tostring(Value))
     end,
@@ -267,6 +294,7 @@ local NectarDropdown = BotanistTab:CreateDropdown({
     CurrentOption = "Satisfying",
     Flag = "NectarDropdown",
     Callback = function(Option)
+        if not Modules.Status["World"] then Log("Error: World module not loaded.") return end
         Modules.World.CurrentNectarGoal = Option
         Log("Nectar Priority: " .. Option)
     end,
@@ -333,6 +361,7 @@ local ToyToggle = BotanistTab:CreateToggle({
     CurrentValue = false,
     Flag = "ToyToggle",
     Callback = function(Value)
+        if not Modules.Status["World"] then Log("Error: World module not loaded.") return end
         Modules.World.IsToyAuto = Value
         Log("Auto-Toys: " .. tostring(Value))
     end,
@@ -343,6 +372,7 @@ local BeesmasToggle = BotanistTab:CreateToggle({
     CurrentValue = false,
     Flag = "BeesmasToggle",
     Callback = function(Value)
+        if not Modules.Status["World"] then Log("Error: World module not loaded.") return end
         Modules.World.IsBeesmasAuto = Value
         Log("Beesmas Suite: " .. tostring(Value))
     end,
