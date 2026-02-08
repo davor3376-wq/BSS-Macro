@@ -20,7 +20,28 @@ function Pathfinder.GetActiveQuests()
         -- This is a heuristic approach; specific structure depends on the game
         for _, child in ipairs(questGui:GetDescendants()) do
             if child:IsA("TextLabel") and string.find(child.Text, "Quest") then
-                table.insert(activeQuests, child.Text)
+                local questName = child.Text
+                local progress = "0%"
+
+                -- Attempt to find progress in nearby labels or within the text itself
+                -- Look for patterns like "500/1000" or "50%"
+                local pMatch = string.match(questName, "(%d+/%d+)") or string.match(questName, "(%d+%%)")
+                if pMatch then
+                    progress = pMatch
+                else
+                    -- Check siblings for progress text
+                    for _, sibling in ipairs(child.Parent:GetChildren()) do
+                        if sibling:IsA("TextLabel") and sibling ~= child then
+                            local sMatch = string.match(sibling.Text, "(%d+/%d+)") or string.match(sibling.Text, "(%d+%%)")
+                            if sMatch then
+                                progress = sMatch
+                                break
+                            end
+                        end
+                    end
+                end
+
+                table.insert(activeQuests, {Name = questName, Progress = progress})
             end
         end
     end
@@ -29,7 +50,8 @@ function Pathfinder.GetActiveQuests()
 end
 
 -- Processes a quest name to determine the farming goal
-function Pathfinder.ProcessQuest(questName)
+function Pathfinder.ProcessQuest(questObj)
+    local questName = questObj.Name or "Unknown Quest"
     print("Processing Quest: " .. questName)
 
     -- Access global Manifest
@@ -107,7 +129,7 @@ function Pathfinder.StartQuesting()
     end
 
     local currentQuest = quests[1] -- Prioritize first found quest
-    print("Director: Selected Quest - " .. currentQuest)
+    print("Director: Selected Quest - " .. currentQuest.Name .. " (" .. currentQuest.Progress .. ")")
 
     local targetField = Pathfinder.ProcessQuest(currentQuest)
 
