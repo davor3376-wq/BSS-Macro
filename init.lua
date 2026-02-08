@@ -114,12 +114,7 @@ local function LoadModule(moduleName, fileName)
         if loadSuccess and moduleFunc then
             local module = moduleFunc()
             Modules[moduleName] = module
-
-            -- Initialize module if it has an Init function
-            if module.Init then
-                module.Init()
-            end
-            Log(moduleName .. " Loaded and Initialized.")
+            Log(moduleName .. " Loaded.")
         else
             Log("Error compiling " .. moduleName)
         end
@@ -134,5 +129,167 @@ LoadModule("Actuator", "actuator.lua")
 LoadModule("Slayer", "slayer.lua")
 LoadModule("Pathfinder", "pathfinder.lua")
 LoadModule("World", "world.lua")
+
+-- Global Registry
+_G.Aegis = {
+    Manifest = Manifest,
+    Actuator = Modules.Actuator,
+    Slayer = Modules.Slayer,
+    Pathfinder = Modules.Pathfinder,
+    World = Modules.World,
+    Log = Log,
+    ParseLatexFormula = ParseLatexFormula,
+    WebhookURL = "",
+    SendWebhook = nil
+}
+
+-- Initialize Modules (Order matters: Actuator first, then dependent modules)
+if Modules.Actuator and Modules.Actuator.Init then Modules.Actuator.Init() end
+if Modules.Slayer and Modules.Slayer.Init then Modules.Slayer.Init() end
+if Modules.Pathfinder and Modules.Pathfinder.Init then Modules.Pathfinder.Init() end
+if Modules.World and Modules.World.Init then Modules.World.Init() end
+
+-- Webhook System
+_G.Aegis.SendWebhook = function(message)
+    if _G.Aegis.WebhookURL == "" then
+        Log("Webhook URL not set.")
+        return
+    end
+
+    local payload = HttpService:JSONEncode({
+        content = message,
+        username = "Aegis Macro",
+        avatar_url = "https://i.imgur.com/your_logo.png" -- Placeholder
+    })
+
+    local success, response = pcall(function()
+        return request({
+            Url = _G.Aegis.WebhookURL,
+            Method = "POST",
+            Headers = {["Content-Type"] = "application/json"},
+            Body = payload
+        })
+    end)
+
+    if success then
+        Log("Webhook Sent Successfully.")
+    else
+        Log("Failed to send Webhook: " .. tostring(response))
+    end
+end
+
+-- UI Controls (Overlord Tab)
+local FarmingToggle = OverlordTab:CreateToggle({
+    Name = "Enable Farming",
+    CurrentValue = false,
+    Flag = "FarmingToggle",
+    Callback = function(Value)
+        if Value then
+            Log("Farming Enabled.")
+            if Modules.Actuator.CurrentField then
+                Modules.Actuator.StartFarming(Modules.Actuator.CurrentField)
+            else
+                Log("No Field Selected. Please select a field via the Director or manually.")
+            end
+        else
+            Log("Farming Disabled.")
+            Modules.Actuator.StopFarming()
+        end
+    end,
+})
+
+local PatternDropdown = OverlordTab:CreateDropdown({
+    Name = "Farming Pattern",
+    Options = {"Circular", "S-Pattern"},
+    CurrentOption = "Circular",
+    Flag = "PatternDropdown",
+    Callback = function(Option)
+        Modules.Actuator.FarmingPattern = Option
+        Log("Pattern set to: " .. Option)
+    end,
+})
+
+local RadiusSlider = OverlordTab:CreateSlider({
+    Name = "Pattern Radius/Width",
+    Range = {5, 50},
+    Increment = 1,
+    Suffix = "Studs",
+    CurrentValue = 15,
+    Flag = "RadiusSlider",
+    Callback = function(Value)
+        Modules.Actuator.FarmingRadius = Value
+        Modules.Actuator.PatternWidth = Value
+        Modules.Actuator.PatternLength = Value
+        Log("Radius/Width set to: " .. tostring(Value))
+    end,
+})
+
+local AutoQuestToggle = OverlordTab:CreateToggle({
+    Name = "The Director (Auto-Quest)",
+    CurrentValue = false,
+    Flag = "AutoQuestToggle",
+    Callback = function(Value)
+        if Value then
+            Log("Director Activated.")
+            Modules.Pathfinder.StartQuesting()
+        else
+            Log("Director Deactivated.")
+            Modules.Actuator.StopFarming()
+        end
+    end,
+})
+
+-- Slayer Tab UI
+local SlayerToggle = SlayerTab:CreateToggle({
+    Name = "Enable Boss Farming",
+    CurrentValue = false,
+    Flag = "SlayerToggle",
+    Callback = function(Value)
+        Modules.Slayer.IsFarmingBoss = Value
+        Log("Boss Farming: " .. tostring(Value))
+    end,
+})
+
+-- Botanist Tab UI
+local PlanterToggle = BotanistTab:CreateToggle({
+    Name = "Auto-Planter",
+    CurrentValue = false,
+    Flag = "PlanterToggle",
+    Callback = function(Value)
+        Modules.World.IsPlanting = Value
+        Log("Auto-Planter: " .. tostring(Value))
+    end,
+})
+
+local NectarDropdown = BotanistTab:CreateDropdown({
+    Name = "Nectar Priority",
+    Options = {"Satisfying", "Comforting", "Motivating", "Invigorating", "Refreshing"},
+    CurrentOption = "Satisfying",
+    Flag = "NectarDropdown",
+    Callback = function(Option)
+        Modules.World.CurrentNectarGoal = Option
+        Log("Nectar Priority: " .. Option)
+    end,
+})
+
+-- Nexus Tab UI (Webhook)
+local WebhookInput = NexusTab:CreateInput({
+    Name = "Discord Webhook URL",
+    PlaceholderText = "https://discord.com/api/webhooks/...",
+    RemoveTextAfterFocusLost = false,
+    Callback = function(Text)
+        _G.Aegis.WebhookURL = Text
+        Log("Webhook URL Updated.")
+    end,
+})
+
+local WebhookTestBtn = NexusTab:CreateButton({
+    Name = "Send Test Webhook",
+    Callback = function()
+        local honey = game.Players.LocalPlayer:FindFirstChild("leaderstats") and game.Players.LocalPlayer.leaderstats:FindFirstChild("Honey")
+        local honeyVal = honey and honey.Value or "Unknown"
+        _G.Aegis.SendWebhook("Test Notification from Aegis Macro.\nCurrent Honey: " .. tostring(honeyVal))
+    end,
+})
 
 Log("Aegis Initialization Complete. Handshake Successful.")
